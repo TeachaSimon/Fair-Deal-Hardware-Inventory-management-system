@@ -15,6 +15,12 @@ cursor.execute(
 
 
 # Functions
+def calculate_gross_sales(quantity, item_price):
+    try:
+        return float(quantity) * float(item_price)
+    except ValueError:
+        return 0.0
+
 def defining():
     Cid = sd.askstring('Enter the item Category', 'What is the category of the item?\t\t\t')
 
@@ -35,8 +41,6 @@ def display_records():
 
     for records in data:
         tree.insert('', END, values=(records[0], records[1], records[2], records[3], records[4]))
-
-
 
 def clear_fields():
     global item_sold, quantity, item_price, category, gross_sales
@@ -62,16 +66,15 @@ def add_record():
 
     if category.get() == '':
         category.set(defining())
-    else:
-        category.set('N/A')
 
     surety = mb.askyesno('Are you sure?',
                          'Are you sure this is the data you want to enter?')
 
     if surety:
+        gross_sales.set(calculate_gross_sales(quantity.get(), item_price.get()))
         try:
             cursor.execute(
-                'INSERT INTO Inventory (item_sold, quantity, item_price, category, gross_sales) VALUES (?, ?, ?, ?, ?)',
+                'INSERT INTO Inventory (ITEM_SOLD, QUANTITY, ITEM_PRICE, CATEGORY, GROSS_SALES) VALUES (?, ?, ?, ?, ?)',
                 (item_sold.get(), quantity.get(), item_price.get(), category.get(), gross_sales.get()))
             connector.commit()
 
@@ -96,10 +99,10 @@ def view_record():
     values_in_selected_item = tree.item(current_item_selected)
     selection = values_in_selected_item['values']
 
-    item_sold.set(selection[0]);
-    quantity.set(selection[1]);
-    item_price.set(selection[2])
-    category.set(selection[3])
+    item_sold.set(selection[3]);
+    quantity.set(selection[0]);
+    item_price.set(selection[1])
+    category.set(selection[2])
     try:
         gross_sales.set(selection[4])
     except:
@@ -117,8 +120,8 @@ def update_record():
             gross_sales.set('N/A')
 
         cursor.execute(
-            'UPDATE Inventory SET item_sold=?, quantity=?, item_price=?, category=?, gross_sales=? WHERE ITEM_PRICE=?',
-            (item_sold.get(), quantity.get(), item_price.get(), category.get(), gross_sales.get(), item_price.get()))
+            'UPDATE Inventory SET ITEM_SOLD=?, QUANTITY=?, ITEM_PRICE=?, CATEGORY=?, GROSS_SALES=? WHERE QUANTITY=?',
+            (item_sold.get(), quantity.get(), item_price.get(), category.get(), gross_sales.get(), quantity.get()))
 
         connector.commit()
 
@@ -176,19 +179,21 @@ def change_availability():
 
     current_item = tree.focus()
     values = tree.item(current_item)
-    item_sold = values['values'][1]
-    item_price = values["values"][3]
+    selected_item_sold = values['values'][0]
+    selected_quantity = values["values"][1]
 
-    if item_sold == 'Sold':
+    if selected_item_sold == 'Sold':
         surety = mb.askyesno('Is sale confirmed?')
         if surety:
-            cursor.execute('UPDATE Inventory SET item_sold=?, quantity=?, gross_sales=? WHERE item_price=?', ('Available', quantity.get(), 'N/A', item_sold))
+            cursor.execute('UPDATE Inventory SET ITEM_SOLD=?, QUANTITY=?, GROSS_SALES=? WHERE QUANTITY=?',
+                           ('Available', quantity.get(), 'N/A', selected_quantity))
             connector.commit()
         else:
             mb.showinfo(
                 'The item has been sold')
     else:
-        cursor.execute('UPDATE Inventory SET item_sold=?, quantity=?, gross_sales=? WHERE item_price=?', ('Available', quantity.get(), 'N/A', item_sold))
+        cursor.execute('UPDATE Inventory SET ITEM_SOLD=?, QUANTITY=?, GROSS_SALES=? WHERE QUANTITY=?',
+                       ('Available', quantity.get(), 'N/A', selected_quantity))
         connector.commit()
 
     clear_and_display()
@@ -259,13 +264,11 @@ Button(RT_frame, text='Delete full inventory', font=btn_font, bg=btn_hlb_bg, wid
     x=178, y=30)
 Button(RT_frame, text='Update Sale details', font=btn_font, bg=btn_hlb_bg, width=17,
        command=update_record).place(x=348, y=30)
-Button(RT_frame, text='Change Item Category', font=btn_font, bg=btn_hlb_bg, width=19,
-       command=change_availability).place(x=518, y=30)
 
 # Right Bottom Frame
 Label(RB_frame, text='HARDWARE INVENTORY', bg=rbf_bg, font=("Noto Sans CJK TC", 15, 'bold')).pack(side=TOP, fill=X)
 
-tree = ttk.Treeview(RB_frame, selectmode=BROWSE, columns=('Item Sold', 'Quantity', 'Item Price', 'Category', 'Gross Sales'))
+tree = ttk.Treeview(RB_frame, selectmode=BROWSE, columns=('Quantity', 'Item Price', 'Category', 'Item Sold', 'Gross Sales'))
 
 XScrollbar = Scrollbar(tree, orient=HORIZONTAL, command=tree.xview)
 YScrollbar = Scrollbar(tree, orient=VERTICAL, command=tree.yview)
