@@ -9,9 +9,9 @@ The Inventory Management System has the following features:
 
     Add items to the inventory with details such as item sold, quantity, item price, and category.
     View and display items in a tabular format with the ability to select and view item details.
-    Update item details including quantity, item price, category, and availability status.
+    Update item details including quantity, item price, category, and item sold.
     Remove items from the inventory.
-    Change the availability status of an item from "Sold" to "Available" or vice versa.
+    
 
 Prerequisites
 
